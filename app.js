@@ -141,8 +141,7 @@ const legend = L.control({ position: 'bottomright' });
 legend.onAdd = () => {
 	const d = L.DomUtil.create('div', 'leaflet-control box legend');
 	d.innerHTML = LEGEND.map(([k, l]) =>
-		`<div><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('')
-		+ `<div class="fine">auto-refresh ${CONFIG.refreshSec}s - Europe/Paris time</div>`;
+		`<div><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('');
 	return d;
 };
 legend.addTo(map);
