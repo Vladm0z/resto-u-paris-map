@@ -1,0 +1,24 @@
+html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.box { background: #ffffffee; border-radius: 8px; padding: 8px 12px;
+       box-shadow: 0 1px 5px rgba(0,0,0,.3); font-size: 13px; line-height: 1.5; }
+.title b { font-size: 14px; }
+.legend .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+               margin-right: 6px; vertical-align: -2px; border: 1px solid #0006; }
+.legend .cnt { color: #555; }
+.legend .fine { margin-top: 4px; color: #777; font-size: 11px; }
+.pop h3 { margin: 0 0 4px; font-size: 15px; }
+.pop .badges { margin: 4px 0; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
+         margin-right: 4px; background: #eee; }
+.badge.type { background: #e3f2fd; }
+.badge.ok   { background: #e8f5e9; }
+.badge.warn { background: #fff3e0; }
+.badge.muted{ background: #f5f5f5; color: #666; }
+.pop .status { font-weight: 600; margin: 4px 0; }
+.pop .addr, .pop .hours { font-size: 12px; color: #444; margin: 3px 0; }
+.pop .src { font-size: 12px; margin-top: 6px; }
+.pop .warn { background: #fff3e0; color: #e65100; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 4px 0; font-weight: 500; }
+.badge.staff { background: #ede7f6; }
+.pop .notice { background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 4px 0; }
+.pop .desc   { font-size: 12px; color: #555; font-style: italic; margin: 4px 0; }
+.pop .sep { border: 0; border-top: 1px dashed #bbb; margin: 8px 0; }
