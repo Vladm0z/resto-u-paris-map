@@ -122,7 +122,7 @@ function popupHtml(places, statuses) {
 const title = L.control({ position: 'topright' });
 title.onAdd = () => {
   const d = L.DomUtil.create('div', 'leaflet-control box title');
-  d.innerHTML = `<b>Resto'U Paris - open now?</b><br><span id="clock"></span><br><span id="total" class="fine"></span>`;
+  d.innerHTML = `<b>Resto'U Paris</b><br><span id="clock"></span><br><span id="total" class="fine"></span>`;
   return d;
 };
 title.addTo(map);
@@ -130,10 +130,10 @@ title.addTo(map);
 const LEGEND = [
   ['dark_green', 'Open - closes in 2 h+'],
   ['green',      'Open - closes in 1-2 h'],
-  ['yellow',     'Open - closes in < 1 h (incl. <= 30 min)'],
+  ['yellow',     'Open - closes in < 1 h'],
   ['blue',       'Closed - opens within 1 h'],
   ['red',        'Closed'],
-  ['confirmed',  'Long-term closure (works - confirmed)'],
+  ['confirmed',  'Long-term closure'],
   ['unknown',    'Hours unknown'],
 ];
 const legend = L.control({ position: 'bottomright' });
