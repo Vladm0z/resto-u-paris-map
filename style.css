@@ -1,15 +1,15 @@
 html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
 .box { background: #ffffffee; border-radius: 8px; padding: 8px 12px;
-       box-shadow: 0 1px 5px rgba(0,0,0,.3); font-size: 13px; line-height: 1.5; }
+	   box-shadow: 0 1px 5px rgba(0,0,0,.3); font-size: 13px; line-height: 1.5; }
 .title b { font-size: 14px; }
 .legend .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
-               margin-right: 6px; vertical-align: -2px; border: 1px solid #0006; }
+			   margin-right: 6px; vertical-align: -2px; border: 1px solid #0006; }
 .legend .cnt { color: #555; }
 .legend .fine { margin-top: 4px; color: #777; font-size: 11px; }
 .pop h3 { margin: 0 0 4px; font-size: 15px; }
 .pop .badges { margin: 4px 0; }
 .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
-         margin-right: 4px; background: #eee; }
+		 margin-right: 4px; background: #eee; }
 .badge.type { background: #e3f2fd; }
 .badge.ok   { background: #e8f5e9; }
 .badge.warn { background: #fff3e0; }
@@ -22,3 +22,38 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
 .pop .notice { background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 4px 0; }
 .pop .desc   { font-size: 12px; color: #555; font-style: italic; margin: 4px 0; }
 .pop .sep { border: 0; border-top: 1px dashed #bbb; margin: 8px 0; }
+
+/* MOBILE */
+.mobile-popup .leaflet-popup-content-wrapper {
+	max-width: min(360px, 92vw) !important; 
+	border-radius: 8px;
+}
+.mobile-popup .leaflet-popup-content {
+	margin: 12px !important;
+	max-height: 75vh;
+	overflow-y: auto;
+	font-size: 13px;
+	line-height: 1.5;
+}
+.mobile-popup .pop * {
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+.mobile-popup .badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin: 6px 0;
+}
+.mobile-popup .badge {
+	margin-right: 0;
+}
+@media (max-width: 400px) {
+	.leaflet-control.box {
+		font-size: 11px;
+		padding: 6px 8px;
+		max-width: 45vw;
+	}
+	.title b { font-size: 12px; }
+	.legend .dot { width: 10px; height: 10px; }
+}
