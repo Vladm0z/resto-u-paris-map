@@ -25,7 +25,7 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
 
 /* MOBILE */
 .mobile-popup .leaflet-popup-content-wrapper {
-	max-width: min(360px, 92vw) !important; 
+	max-width: min(360px, 85vw) !important; 
 	border-radius: 8px;
 }
 .mobile-popup .leaflet-popup-content {
