@@ -183,13 +183,32 @@ function venueHtml(p, s, ok) {
 }
 
 function popupHtml(places, statuses, oks) {
-	let html = '<div class="pop">';
-	places.forEach((p, i) => {
-		if (i > 0) html += '<hr class="sep">';
-		html += venueHtml(p, statuses[i], oks[i]);
-	});
-	html += '</div>';
-	return html;
+  const items = places.map((p, i) => ({ p, s: statuses[i], ok: oks[i] }));
+  
+  // Sort logic
+  items.sort((a, b) => {
+    // Accessible above inaccessible
+    if (a.ok !== b.ok) return a.ok ? -1 : 1;
+    
+    // Sort by status
+    const ra = RANK[a.s.state] || 0;
+    const rb = RANK[b.s.state] || 0;
+    if (ra !== rb) return rb - ra; 
+    
+    // If multiple are open, put the one with the most time left at the top
+    if (a.s.state === 'open' && b.s.state === 'open') return b.s.left - a.s.left;
+    
+    // Alphabetical tie-breaker
+    return a.p.name.localeCompare(b.p.name);
+  });
+
+  let html = '<div class="pop">';
+  items.forEach((it, i) => {
+    if (i > 0) html += '<hr class="sep">';
+    html += venueHtml(it.p, it.s, it.ok);
+  });
+  html += '</div>';
+  return html;
 }
 
 const title = L.control({ position: 'topright' });
