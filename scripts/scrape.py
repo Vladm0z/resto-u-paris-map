@@ -46,10 +46,10 @@ def core_name(name):
     
 def fetch_croustillant_data():
     """Fetches Paris restaurants and the next 7 days of menus from CROUStillant API."""
-    region_code = 22 # Paris region code
+    region_code = 22  # Paris region code
     url = f"https://api.croustillant.menu/v1/regions/{region_code}/restaurants"
     req = urllib.request.Request(url, headers={"User-Agent": "RestoU-Paris-Map/1.0 (university project)"})
-    
+
     restaurants = []
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
@@ -61,14 +61,14 @@ def fetch_croustillant_data():
         return {}
 
     today = date.today()
-    max_date = today + timedelta(days=6) # Keep today + 6 days (7 days total max)
+    max_date = today + timedelta(days=6) # today + 6 days
     result = {}
-    
+
     for rest in restaurants:
         code = rest.get("code")
         nom = rest.get("nom") or ""
         norm_name = re.sub(r"[^a-z0-9]", "", nom.lower())
-        
+
         menus = []
         if code:
             menu_url = f"https://api.croustillant.menu/v1/restaurants/{code}/menu"
@@ -78,12 +78,11 @@ def fetch_croustillant_data():
                     data = json.loads(mr.read().decode('utf-8'))
                     if data.get("success") and data.get("data"):
                         for entry in data["data"]:
-                            # Filter by date: ignore past and far-future menus
+                            # Skip past and far-future menus
                             try:
-                                entry_date = datetime.strptime(entry.get("date"), "%d-%m-%Y").date()
+                                entry_date = datetime.strptime(entry.get("date", ""), "%d-%m-%Y").date()
                             except (ValueError, TypeError):
                                 continue
-                                
                             if entry_date < today or entry_date > max_date:
                                 continue
 
@@ -91,9 +90,9 @@ def fetch_croustillant_data():
                             for repas in entry.get("repas", []):
                                 cats_clean = []
                                 for cat in repas.get("categories", []):
-                                    # Extract ONLY the string name to save massive space
+                                    # Keep ONLY the dish name string; drop code/ordre/placeholder text
                                     plats_clean = [
-                                        p["libelle"] for p in cat.get("plats", []) 
+                                        p["libelle"] for p in cat.get("plats", [])
                                         if p.get("libelle") and not re.search(r"menu non communiqu", p["libelle"], re.I)
                                     ]
                                     if plats_clean:
@@ -104,10 +103,9 @@ def fetch_croustillant_data():
                                 menus.append({"date": entry.get("date"), "repas": repas_clean})
             except Exception:
                 pass
-            time.sleep(0.15) # Rate limits
-            
+            time.sleep(0.15) # respect rate limits
+
         result[norm_name] = {"code": code, "menus": menus, "original_name": nom}
-        
     return result
 
 def hours_section(infos: str) -> str:
@@ -293,19 +291,37 @@ def main():
             "menus": menus, # Stores array of upcoming dates
             "croustillant_code": croustillant_code,
         })
-        
+
+    unique_menus = []
+    menu_index = {}
+    for p in places:
+        refs = []
+        for menu in p.get("menus", []):
+            canonical = json.dumps(menu["repas"], ensure_ascii=False, sort_keys=True)
+            idx = menu_index.get(canonical)
+            if idx is None:
+                idx = len(unique_menus)
+                menu_index[canonical] = idx
+                unique_menus.append(menu["repas"])
+            refs.append({"date": menu["date"], "m": idx})
+        p["menu_refs"] = refs
+        p.pop("menus", None)
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": API, "license": "Licence Ouverte / Etalab",
-        "count": len(places), "places": places,
+        "count": len(places),
+        "menus": unique_menus,
+        "places": places,
     }, ensure_ascii=False, separators=(',', ':')), encoding="utf-8")
-    
+
     unp = sum(1 for p in places if p["schedule_confidence"] == "unparsed")
     cond = sum(1 for p in places if p["conditional_days"])
     confirmed = sum(1 for p in places if p["closure_status"] == "confirmed")
-    with_menus = sum(1 for p in places if p.get("menus") and len(p["menus"]) > 0)
-    print(f"wrote {OUT}: {len(places)} places ({len(places) - unp} parsed, {unp} unparsed, {cond} with conditional days, {with_menus} with menus)")
+    with_menus = sum(1 for p in places if p.get("menu_refs"))
+    print(f"wrote {OUT}: {len(places)} places ({len(places) - unp} parsed, {unp} unparsed, "
+          f"{cond} conditional, {with_menus} with menus, {len(unique_menus)} unique menus)")
     print(f"closures: {confirmed} confirmed, {len(stale)} stale flags ignored: {stale}")
 
 if __name__ == "__main__":

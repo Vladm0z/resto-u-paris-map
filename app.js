@@ -3,7 +3,7 @@ const CONFIG = {
 	darkGreenMin: 120, greenMin: 60, opensSoonMin: 60,
 	refreshSec: 60, center: [48.8566, 2.3522], zoom: 12,
 	groupDecimals: 5, // ~1 m: venues closer than this merge into one marker
-	staleHours: 48,
+	staleHours: 96,
 };
 const COLORS = { dark_green:'#006400', green:'#00a650', yellow:'#ffd400',
 	red:'#e53935', blue:'#1e88e5', unknown:'#8d8d8d', confirmed:'#424242' };
@@ -112,22 +112,35 @@ function campusMapFor(p) {
 	return null;
 }
 
+function resolveMenus(p) {
+	if (!p.menu_refs || !Array.isArray(p.menu_refs)) return [];
+	return p.menu_refs
+		.filter(ref => ref.m != null && GLOBAL_MENUS[ref.m])
+		.map(ref => ({ date: ref.date, repas: GLOBAL_MENUS[ref.m], _ref: ref.m }));
+}
+
 function renderMenus(menus) {
 	if (!menus || !Array.isArray(menus) || menus.length === 0) return '';
-	
+	const allSame = menus.length > 1 && menus.every(m => m._ref === menus[0]._ref);
+
 	let html = '<div class="menu-today">';
-	if (menus.length > 1) {
+	if (allSame) {
+		const first = formatDateLabel(parseCroustillantDate(menus[0].date));
+		const last = formatDateLabel(parseCroustillantDate(menus[menus.length - 1].date));
+		html += `<div class="menu-range">Menu ${esc(first)} – ${esc(last)} (unchanged)</div>`;
+		menus = [menus[0]];
+	} else if (menus.length > 1) {
 		html += '<div class="menu-tabs">';
 		menus.forEach((m, i) => {
-			const d = parseCroustillantDate(m.date);
-			const label = formatDateLabel(d);
+			const label = formatDateLabel(parseCroustillantDate(m.date));
 			html += `<button type="button" class="menu-tab ${i === 0 ? 'active' : ''}" data-tab="${i}">${label}</button>`;
 		});
 		html += '</div>';
 	}
-	
+
 	menus.forEach((m, i) => {
-		html += `<div class="menu-content" data-tab="${i}" style="${i > 0 ? 'display:none;' : ''}">`;
+		const hidden = (!allSame && i > 0) ? 'display:none;' : '';
+		html += `<div class="menu-content" data-tab="${i}" style="${hidden}">`;
 		for (const repas of m.repas) {
 			const mealType = repas.type === 'soir' ? 'Dinner' : (repas.type === 'midi' ? 'Lunch' : repas.type);
 			html += `<div class="meal"><i>${esc(mealType)}</i>`;
@@ -305,13 +318,13 @@ function venueHtml(p, s, ok) {
 	if ((p.conditional_days || []).length)
 		notices += `<div class="notice">[i] ${p.conditional_days.map(d => WD[d]).join(', ')} opening depends on the university calendar</div>`;
 
-	const menuHtml = renderMenus(p.menus);
+	const menuHtml = renderMenus(resolveMenus(p));
 	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
 	const cm = campusMapFor(p);
 	const venuePage = venuePageFor(p); 
 	
 	let croustillantFallback = '';
-	if ((!p.menus || p.menus.length === 0) && p.croustillant_code) {
+	if ((!p.menu_refs || p.menu_refs.length === 0) && p.croustillant_code) {
 		croustillantFallback = ` | <a href="https://croustillant.menu/fr/restaurant/${p.croustillant_code}" target="_blank" rel="noopener">Check menu (CROUStillant)</a>`;
 	}
 
@@ -420,11 +433,13 @@ document.getElementById('staff-chk').addEventListener('change', e => {
 let items = [];
 let totalVenues = 0;
 let generatedAt = null;
+let GLOBAL_MENUS = [];
 
 fetch('data/paris.json')
 	.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
 	.then(data => {
 		generatedAt = data.generated_at ? Date.parse(data.generated_at) : null;
+		GLOBAL_MENUS = data.menus || [];
 		const dl = document.getElementById('data-line');
 		if (dl && data.generated_at) dl.textContent = `data from: ${data.generated_at.slice(0, 10)}`;
 
