@@ -1,225 +1,303 @@
 /* Resto'U Paris - live open/closed map. Pan & zoom only */
 const CONFIG = {
-    darkGreenMin: 120, greenMin: 60, opensSoonMin: 60,
-    refreshSec: 60, center: [48.8566, 2.3522], zoom: 12,
-    groupDecimals: 5,   // ~1 m: venues closer than this merge into one marker
+	darkGreenMin: 120, greenMin: 60, opensSoonMin: 60,
+	refreshSec: 60, center: [48.8566, 2.3522], zoom: 12,
+	groupDecimals: 5, // ~1 m: venues closer than this merge into one marker
 };
 const COLORS = { dark_green:'#006400', green:'#00a650', yellow:'#ffd400',
-                 red:'#e53935', blue:'#1e88e5', unknown:'#8d8d8d', confirmed:'#424242' };
+								 red:'#e53935', blue:'#1e88e5', unknown:'#8d8d8d', confirmed:'#424242' };
 const COLOR_KEY = Object.fromEntries(Object.entries(COLORS).map(([k, v]) => [v, k]));
 const WD = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const WD_SHORT = { Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6 };
 const RANK = { open: 4, opens_soon: 3, closed: 2, confirmed: 1, unknown: 0 };
 
+/* university filter table */
+const UNIS = [
+	['sorbonne', 'Sorbonne Université', /sorbonne\s+universit/],
+	['paris1', 'Université Paris 1 Panthéon-Sorbonne', /panth[ée]on\s*-?\s*sorbonne|paris\s*[1i]\b[^,;]*sorbonne/],
+	['assas', 'Université Panthéon-Assas (Paris II)', /assas/],
+	['cite', 'Université Paris Cité', /universit[ée]\s+de\s+paris\b/],
+	['dauphine', 'Université Paris Dauphine-PSL', /dauphine/],
+	['sciencespo', 'Sciences Po', /sciences\s*po/],
+	['inalco', 'INALCO', /inalco/],
+	['ens', 'ENS (École normale supérieure)', /\bens\b|ens\s+jourdan/],
+	['ensa', 'ENSA Paris-Belleville', /\bensa\b/],
+	['icp', 'Institut Catholique de Paris', /institut\s+catholique/],
+	['mines', 'Mines Paris-PSL', /mines/],
+	['nation', 'Campus Nation', /campus\s+nation/],
+	['condorcet', 'Campus Condorcet', /campus\s+condorcet/],
+];
+const GENERIC_STAFF_RE = /tout\s+(le\s+)?personnel|personnels?\s+de\s+l['’]enseignement/;
+const profile = { uni: null, staff: false };
+
+function canEnter(p, prof) {
+	if (!prof.uni) return true; // no filter
+	const uni = UNIS.find(u => u[0] === prof.uni);
+	if (!uni) return true;
+	const text = (((p.access && p.access.note) || '') + ' ' + (p.name || '')).toLowerCase();
+	const mine = uni[2].test(text);
+	const lvl = (p.access && p.access.level) || 'unknown';
+	if (prof.staff) {
+		if (lvl === 'staff') return mine || GENERIC_STAFF_RE.test(text);
+		if (lvl === 'restricted') return /personnel/.test(text) && mine;
+		return true; // CROUS venues serve staff as well
+	}
+	if (lvl === 'staff') return false; // staff-only venue, student profile
+	if (lvl === 'restricted') return mine;
+	return true; // open to all students / unknown
+}
+
+function hexToRgba(hex, a) {
+	const n = parseInt(hex.slice(1), 16);
+	return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
 const map = L.map('map', {
-    center: CONFIG.center, zoom: CONFIG.zoom, minZoom: 10, maxZoom: 19,
-    dragging: true, scrollWheelZoom: true, doubleClickZoom: true,
-    touchZoom: true, keyboard: true, boxZoom: true,
+	center: CONFIG.center, zoom: CONFIG.zoom, minZoom: 10, maxZoom: 19,
+	dragging: true, scrollWheelZoom: true, doubleClickZoom: true,
+	touchZoom: true, keyboard: true, boxZoom: true,
 });
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | data: MESR open data (Licence Ouverte)',
+	maxZoom: 19,
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | data: MESR open data (Licence Ouverte)',
 }).addTo(map);
 
 const fmtMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 const fmtDur = m => m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}` : `${m} min`;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
-    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+	({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const trunc = (s, n) => (s && s.length > n) ? s.slice(0, n - 1) + '...' : s;
 
 function parisNow() {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
-    }).formatToParts(new Date());
-    const g = t => parts.find(p => p.type === t).value;
-    let h = parseInt(g('hour'), 10); if (h === 24) h = 0;
-    return { day: WD_SHORT[g('weekday')], minute: h * 60 + parseInt(g('minute'), 10) };
+	const parts = new Intl.DateTimeFormat('en-GB', {
+		timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+	}).formatToParts(new Date());
+	const g = t => parts.find(p => p.type === t).value;
+	let h = parseInt(g('hour'), 10); if (h === 24) h = 0;
+	return { day: WD_SHORT[g('weekday')], minute: h * 60 + parseInt(g('minute'), 10) };
 }
 
 function statusOf(p, now) {
-    if (p.closure_status === 'confirmed')
-        return { state: 'confirmed', label: 'Long-term closure (works/renovation) - see notice' };
-    const sched = p.schedule || {};
-    for (const [o, c] of (sched[String(now.day)] || [])) {
-        if (now.minute >= o && now.minute < c) {
-            const left = c - now.minute;
-            return { state: 'open', left, label: `Open now - closes at ${fmtMin(c)} (in ${fmtDur(left)})` };
-        }
-    }
-    for (let d = 0; d < 7; d++) {
-        const day = (now.day + d) % 7;
-        for (const [o] of (sched[String(day)] || []).slice().sort((a, b) => a[0] - b[0])) {
-            if (d === 0 && o <= now.minute) continue;
-            const delta = d * 1440 + o - now.minute;
-            const when = d === 0 ? 'today' : d === 1 ? 'tomorrow' : WD[day];
-            if (delta <= CONFIG.opensSoonMin)
-                return { state: 'opens_soon', label: `Closed - opens ${when} at ${fmtMin(o)} (in ${fmtDur(delta)})` };
-            return { state: 'closed', label: `Closed - opens ${when} at ${fmtMin(o)}` };
-        }
-    }
-    return { state: 'unknown', label: 'Opening hours unknown - see details' };
+	if (p.closure_status === 'confirmed')
+		return { state: 'confirmed', label: 'Long-term closure (works/renovation) - see notice' };
+	const sched = p.schedule || {};
+	for (const [o, c] of (sched[String(now.day)] || [])) {
+		if (now.minute >= o && now.minute < c) {
+			const left = c - now.minute;
+			return { state: 'open', left, label: `Open now - closes at ${fmtMin(c)} (in ${fmtDur(left)})` };
+		}
+	}
+	for (let d = 0; d < 7; d++) {
+		const day = (now.day + d) % 7;
+		for (const [o] of (sched[String(day)] || []).slice().sort((a, b) => a[0] - b[0])) {
+			if (d === 0 && o <= now.minute) continue;
+			const delta = d * 1440 + o - now.minute;
+			const when = d === 0 ? 'today' : d === 1 ? 'tomorrow' : WD[day];
+			if (delta <= CONFIG.opensSoonMin)
+				return { state: 'opens_soon', label: `Closed - opens ${when} at ${fmtMin(o)} (in ${fmtDur(delta)})` };
+			return { state: 'closed', label: `Closed - opens ${when} at ${fmtMin(o)}` };
+		}
+	}
+	return { state: 'unknown', label: 'Opening hours unknown - see details' };
 }
 
 function colorFor(s) {
-    if (s.state === 'open') {
-        if (s.left >= CONFIG.darkGreenMin) return COLORS.dark_green;
-        if (s.left >= CONFIG.greenMin)    return COLORS.green;
-        return COLORS.yellow;
-    }
-    if (s.state === 'opens_soon') return COLORS.blue;
-    if (s.state === 'closed')     return COLORS.red;
-    if (s.state === 'confirmed')  return COLORS.confirmed;
-    return COLORS.unknown;
+	if (s.state === 'open') {
+		if (s.left >= CONFIG.darkGreenMin) return COLORS.dark_green;
+		if (s.left >= CONFIG.greenMin) return COLORS.green;
+		return COLORS.yellow;
+	}
+	if (s.state === 'opens_soon') return COLORS.blue;
+	if (s.state === 'closed') return COLORS.red;
+	if (s.state === 'confirmed') return COLORS.confirmed;
+	return COLORS.unknown;
 }
 
+/* best status of a set: open > opens_soon > closed > confirmed > unknown */
 function groupStatus(statuses) {
-    let best = statuses[0];
-    for (const s of statuses) if (RANK[s.state] > RANK[best.state]) best = s;
-    if (best.state === 'open')
-        for (const s of statuses) if (s.state === 'open' && s.left > best.left) best = s;
-    return best;
+	let best = statuses[0];
+	for (const s of statuses) if (RANK[s.state] > RANK[best.state]) best = s;
+	if (best.state === 'open')
+		for (const s of statuses) if (s.state === 'open' && s.left > best.left) best = s;
+	return best;
 }
 
 function accessBadge(a) {
-    if (!a) return '';
-    if (a.level === 'all')        return `<span class="badge ok">open to ALL students</span>`;
-    if (a.level === 'staff')      return `<span class="badge staff">staff only${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
-    if (a.level === 'restricted') return `<span class="badge warn">restricted${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
-    return `<span class="badge muted">${a.note ? esc(trunc(a.note, 70)) : 'no access info (CROUS default: all students)'}</span>`;
+	if (!a) return '';
+	if (a.level === 'all') return `<span class="badge ok">open to ALL students</span>`;
+	if (a.level === 'staff') return `<span class="badge staff">staff only${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
+	if (a.level === 'restricted') return `<span class="badge warn">restricted${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
+	return `<span class="badge muted">${a.note ? esc(trunc(a.note, 70)) : 'no access info (CROUS default: all students)'}</span>`;
 }
 
-function venueHtml(p, s) {
-    let notices = '';
-    if (p.closure_status === 'confirmed')
-        notices += `<div class="warn">[!] ${esc(p.description || p.closure_notice || 'Closed for renovation - verify locally')}</div>`;
-    else if (p.closure_status === 'notice_only' && p.closure_notice)
-        notices += `<div class="notice">[i] ${esc(p.closure_notice)}</div>`;
-    else if (p.description)
-        notices += `<div class="desc">${esc(p.description)}</div>`;
-    return `<h3>${esc(p.name)}</h3> <div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}</div> <div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div> ${notices} <div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div> <div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')} ${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>`;
+function venueHtml(p, s, ok) {
+	let notices = '';
+	if (p.closure_status === 'confirmed')
+		notices += `<div class="warn">[!] ${esc(p.description || p.closure_notice || 'Closed for renovation - verify locally')}</div>`;
+	else if (p.closure_status === 'notice_only' && p.closure_notice)
+		notices += `<div class="notice">[i] ${esc(p.closure_notice)}</div>`;
+	else if (p.description)
+		notices += `<div class="desc">${esc(p.description)}</div>`;
+	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
+	return `<h3>${esc(p.name)}</h3>
+		<div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}${dimBadge}</div>
+		<div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div>
+		${notices}
+		<div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div>
+		<div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')}
+			${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>`;
 }
 
-function popupHtml(places, statuses) {
-    let html = '<div class="pop">';
-    places.forEach((p, i) => {
-        if (i > 0) html += '<hr class="sep">';
-        html += venueHtml(p, statuses[i]);
-    });
-    html += `<div class="src"><a href="https://www.etudiant.gouv.fr/fr/carte-pour-trouver-les-resto-u-235" target="_blank" rel="noopener">Official CROUS map</a></div></div>`;
-    return html;
+function popupHtml(places, statuses, oks) {
+	let html = '<div class="pop">';
+	places.forEach((p, i) => {
+		if (i > 0) html += '<hr class="sep">';
+		html += venueHtml(p, statuses[i], oks[i]);
+	});
+	html += `<div class="src"><a href="https://www.etudiant.gouv.fr/fr/carte-pour-trouver-les-resto-u-235" target="_blank" rel="noopener">Official CROUS map</a></div></div>`;
+	return html;
 }
 
 const title = L.control({ position: 'topright' });
 title.onAdd = () => {
-    const d = L.DomUtil.create('div', 'leaflet-control box title');
-    d.innerHTML = `<b>Resto'U Paris</b><br><span id="clock"></span><br><span id="total" class="fine"></span>`;
-    return d;
+	const d = L.DomUtil.create('div', 'leaflet-control box title');
+	d.innerHTML = `<b>Resto'U Paris</b><br><span id="clock"></span><br><span id="total" class="fine"></span>`;
+	return d;
 };
 title.addTo(map);
 
 const LEGEND = [
-    ['dark_green', 'Open - closes in 2 h+'],
-    ['green',      'Open - closes in 1-2 h'],
-    ['yellow',     'Open - closes in < 1 h'],
-    ['blue',       'Closed - opens within 1 h'],
-    ['red',        'Closed'],
-    ['confirmed',  'Long-term closure'],
-    ['unknown',    'Hours unknown'],
+	['dark_green', 'Open - closes in 2 h+'],
+	['green', 'Open - closes in 1-2 h'],
+	['yellow', 'Open - closes in < 1 h'],
+	['blue', 'Closed - opens within 1 h'],
+	['red', 'Closed'],
+	['confirmed', 'Long-term closure'],
+	['unknown', 'Hours unknown'],
 ];
-const legend = L.control({ position: 'bottomright' });
-legend.onAdd = () => {
-    const d = L.DomUtil.create('div', 'leaflet-control box legend');
-    d.innerHTML = LEGEND.map(([k, l]) =>
-        `<div><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('')
-        + `<div class="fine">auto-refresh ${CONFIG.refreshSec}s - Europe/Paris time</div>`;
-    return d;
+
+/* collapsible menu: profile filter + legend */
+const panel = L.control({ position: 'bottomright' });
+panel.onAdd = () => {
+	const d = L.DomUtil.create('div', 'leaflet-control box panel');
+	d.innerHTML =
+		`<button id="panel-toggle" class="panel-btn" type="button">[ menu ]</button>
+		 <div id="panel-body" class="panel-body hidden">
+			 <div class="panel-sec"><b>your profile</b>
+				 <select id="uni-select" aria-label="university">
+					 <option value="">no filter - show all venues</option>
+					 ${UNIS.map(u => `<option value="${u[0]}">${esc(u[1])}</option>`).join('')}
+				 </select>
+				 <label class="chk"><input type="checkbox" id="staff-chk"> I am staff (not student)</label>
+				 <div class="fine" id="filtered-line"></div>
+			 </div>
+			 <div class="panel-sec"><b>legend</b>
+				 ${LEGEND.map(([k, l]) =>
+					 `<div><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('')}
+			 </div>
+			 <div class="fine">auto-refresh ${CONFIG.refreshSec}s - Europe/Paris time</div>
+		 </div>`;
+	L.DomEvent.disableClickPropagation(d);
+	L.DomEvent.disableScrollPropagation(d);
+	return d;
 };
-legend.addTo(map);
+panel.addTo(map);
+
+document.getElementById('panel-toggle').addEventListener('click', () => {
+	const body = document.getElementById('panel-body');
+	const hidden = body.classList.toggle('hidden');
+	document.getElementById('panel-toggle').textContent = hidden ? '[ menu ]' : '[ close ]';
+});
+document.getElementById('uni-select').addEventListener('change', e => {
+	profile.uni = e.target.value || null;
+	tick();
+});
+document.getElementById('staff-chk').addEventListener('change', e => {
+	profile.staff = e.target.checked;
+	tick();
+});
 
 let items = [];
+let totalVenues = 0;
 fetch('data/paris.json')
-.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-.then(data => {
-    const groups = new Map();
-    for (const p of data.places) {
-        const k = p.lat.toFixed(CONFIG.groupDecimals) + ',' + p.lon.toFixed(CONFIG.groupDecimals);
-        if (!groups.has(k)) groups.set(k, { lat: 0, lon: 0, places: [] });
-        const g = groups.get(k);
-        g.places.push(p);
-        g.lat += p.lat; g.lon += p.lon;
-    }
-    for (const g of groups.values()) { g.lat /= g.places.length; g.lon /= g.places.length; }
-    
-    for (const g of groups.values()) {
-        const size = g.places.length > 1 ? 26 : 22; // Slightly larger for multi-venue spots
-        const icon = L.divIcon({
-            className: 'pie-marker-wrapper',
-            html: `<div class="pie-marker"></div>`,
-            iconSize: [size, size],
-            iconAnchor: [size/2, size/2]
-        });
-        const marker = L.marker([g.lat, g.lon], { icon: icon }).addTo(map);
-        items.push({ places: g.places, marker, size });
-    }
-    const el = document.getElementById('total');
-    if (el) el.textContent = `${data.places.length} venues - ${items.length} map spots`;
-    tick();
-    setInterval(tick, CONFIG.refreshSec * 1000);
-})
-.catch(e => alert('Could not load data/paris.json - run scripts/scrape.py first. (' + e + ')'));
+	.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+	.then(data => {
+		/* group venues */
+		const groups = new Map();
+		for (const p of data.places) {
+			const k = p.lat.toFixed(CONFIG.groupDecimals) + ',' + p.lon.toFixed(CONFIG.groupDecimals);
+			if (!groups.has(k)) groups.set(k, { lat: 0, lon: 0, places: [] });
+			const g = groups.get(k);
+			g.places.push(p);
+			g.lat += p.lat; g.lon += p.lon;
+		}
+		for (const g of groups.values()) { g.lat /= g.places.length; g.lon /= g.places.length; }
+		for (const g of groups.values()) {
+			const size = g.places.length > 1 ? 26 : 22; // slightly larger for multi-venue spots
+			const icon = L.divIcon({
+				className: 'pie-marker-wrapper',
+				html: '<div class="pie-marker"></div>',
+				iconSize: [size, size],
+				iconAnchor: [size / 2, size / 2],
+			});
+			const marker = L.marker([g.lat, g.lon], { icon }).addTo(map);
+			items.push({ places: g.places, marker, size, names: g.places.map(p => p.name).join(' / ') });
+		}
+		totalVenues = data.places.length;
+		const el = document.getElementById('total');
+		if (el) el.textContent = `${totalVenues} venues - ${items.length} map spots`;
+		tick();
+		setInterval(tick, CONFIG.refreshSec * 1000);
+	})
+	.catch(e => alert('Could not load data/paris.json - run scripts/scrape.py first. (' + e + ')'));
 
 function tick() {
-    const now = parisNow();
-    const counts = Object.fromEntries(Object.keys(COLORS).map(k => [k, 0]));
-    
-    for (const it of items) {
-        const statuses = it.places.map(p => statusOf(p, now));
-        
-        // Count individual venues
-        for (const s of statuses) {
-            const col = colorFor(s);
-            counts[COLOR_KEY[col]]++;
-        }
+	const now = parisNow();
+	const counts = Object.fromEntries(Object.keys(COLORS).map(k => [k, 0]));
+	let filtered = 0;
+	for (const it of items) {
+		const statuses = it.places.map(p => statusOf(p, now));
+		const oks = it.places.map(p => canEnter(p, profile));
+		filtered += oks.filter(o => !o).length;
+		const pool = statuses.filter((_, i) => oks[i]); // accessible venues only
+		const dim = pool.length === 0; // nothing accessible at this spot
+		const best = groupStatus(pool.length ? pool : statuses);
 
-        // Build conic-gradient for the pie chart
-        const n = statuses.length;
-        const step = 100 / n;
-        const stops = [];
-        for (let i = 0; i < n; i++) {
-            const color = colorFor(statuses[i]);
-            stops.push(`${color} ${(i * step).toFixed(2)}% ${((i + 1) * step).toFixed(2)}%`);
-        }
-        const gradient = `conic-gradient(${stops.join(', ')})`;
-        
-        const el = it.marker.getElement();
-        if (el) {
-            const pieDiv = el.querySelector('.pie-marker');
-            if (pieDiv) pieDiv.style.background = gradient;
-        }
+		/* one pie slice per venue */
+		const step = 100 / statuses.length;
+		const stops = statuses.map((s, i) => {
+			const col = colorFor(s);
+			return `${oks[i] ? col : hexToRgba(col, 0.15)} ${(i * step).toFixed(2)}% ${((i + 1) * step).toFixed(2)}%`;
+		});
+		const el = it.marker.getElement();
+		if (el) {
+			const pie = el.querySelector('.pie-marker');
+			if (pie) {
+				pie.style.background = `conic-gradient(${stops.join(', ')})`;
+				pie.classList.toggle('dim', dim);
+			}
+		}
 
-        // Tooltip and Popup
-        const best = groupStatus(statuses);
-        const names = it.places.map(p => p.name).join(' / ');
-        const tooltipText = `${names} - ${best.label}`;
-        
-        if (!it.tooltipBound) {
-            it.marker.bindTooltip(tooltipText, { direction: 'top', offset: [0, -it.size/2] });
-            it.tooltipBound = true;
-        } else {
-            it.marker.setTooltipContent(tooltipText);
-        }
-        
-        it.marker.bindPopup(popupHtml(it.places, statuses), {
-            autoPan: true,
-            className: 'mobile-popup',
-            maxWidth: 360
-        });
-    }
-    
-    for (const [k] of LEGEND) {
-        const el = document.getElementById('cnt-' + k);
-        if (el) el.textContent = counts[k] ? `(${counts[k]})` : '';
-    }
-    const el = document.getElementById('clock');
-    if (el) el.textContent = `Paris time: ${fmtMin(now.minute)} - ${WD[now.day]}`;
+		const tooltipText = `${it.names} - ${best.label}${dim ? ' [filtered out]' : ''}`;
+		if (!it.tooltipBound) {
+			it.marker.bindTooltip(tooltipText, { direction: 'top', offset: [0, -it.size / 2] });
+			it.tooltipBound = true;
+		} else {
+			it.marker.setTooltipContent(tooltipText);
+		}
+		it.marker.bindPopup(popupHtml(it.places, statuses, oks), {
+			autoPan: true, className: 'mobile-popup', maxWidth: 360,
+		});
+
+		/* count accessible venues individually */
+		for (const s of pool) counts[COLOR_KEY[colorFor(s)]]++;
+	}
+	for (const [k] of LEGEND) {
+		const el = document.getElementById('cnt-' + k);
+		if (el) el.textContent = counts[k] ? `(${counts[k]})` : '';
+	}
+	const fl = document.getElementById('filtered-line');
+	if (fl) fl.textContent = profile.uni ? `filtered out: ${filtered} of ${totalVenues} venues` : '';
+	const el = document.getElementById('clock');
+	if (el) el.textContent = `Paris time: ${fmtMin(now.minute)} - ${WD[now.day]}`;
 }
