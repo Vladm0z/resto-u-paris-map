@@ -30,6 +30,33 @@ const UNIS = [
 const GENERIC_STAFF_RE = /tout\s+(le\s+)?personnel|personnels?\s+de\s+l['’]enseignement/;
 const profile = { uni: null, staff: false };
 
+/* official campus maps */
+const CAMPUS_MAPS = [
+	[/jussieu|cuvier|atrium|l'express|l'ardoise/,
+	 'Campus Jussieu plan', 'https://sciences.sorbonne-universite.fr/vie-de-campus-sciences/accueil-vie-pratique/plan-du-campus'],
+	[/clignancourt|francis de croisset|malesherbes|18 bis rue de la sorbonne/,
+	 'Sorbonne campuses card', 'https://guideetudiant.sorbonne-universite.fr/universite/carte-des-campus'],
+	[/cit[ée] internationale|23 boulevard jourdan/,
+	 'Cité U campus plan', 'https://www.ciup.fr/wp-content/uploads/2023/07/PLAN-2023.pdf'],
+	[/48 boulevard jourdan|ens jourdan/,
+	 'Campus Jourdan access', 'https://www.parisschoolofeconomics.eu/en/about-pse/access-jourdan-campus/'],
+	[/saint-guillaume|saint-thomas|sciences\s*po/,
+	 'Sciences Po campus plan', 'https://www.sciencespo.fr/sites/default/files/Plan-SciencesPo.pdf'],
+	[/inalco/,
+	 'INALCO orientation', 'https://www.inalco.fr/sorienter'],
+	[/institut catholique|21 rue d'assas/,
+	 'ICP campus plan', 'https://www.icp.fr/vie-du-campus/paris/plan-du-campus-de-paris'],
+	[/porte de la chapelle|condorcet/,
+	 'Campus Condorcet Paris', 'https://www.campus-condorcet.fr/fr/le-campus/site-de-paris'],
+	[/universit[ée] de paris|iut de paris|lacretelle|necker|pharmacie|saints-p|bichat|pajol|mazet|observatoire/,
+	 'Paris Cité sites', 'https://u-paris.fr/nos-sites-et-campus/'],
+];
+function campusMapFor(p) {
+	const text = ((p.name || '') + ' ' + (p.address || '') + ' ' + ((p.access && p.access.note) || '')).toLowerCase();
+	for (const [re, label, url] of CAMPUS_MAPS) if (re.test(text)) return { label, url };
+	return null;
+}
+
 function canEnter(p, prof) {
 	if (!prof.uni) return true; // no filter
 	const uni = UNIS.find(u => u[0] === prof.uni);
@@ -139,13 +166,20 @@ function venueHtml(p, s, ok) {
 	else if (p.description)
 		notices += `<div class="desc">${esc(p.description)}</div>`;
 	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
+	const cm = campusMapFor(p);
+	const gmaps = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`;
 	return `<h3>${esc(p.name)}</h3>
 		<div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}${dimBadge}</div>
 		<div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div>
 		${notices}
 		<div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div>
 		<div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')}
-			${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>`;
+			${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>
+		<div class="src">
+			<a href="https://www.crous-paris.fr/se-restaurer/carte/" target="_blank" rel="noopener">CROUS Paris map</a>
+			${cm ? ` | <a href="${cm.url}" target="_blank" rel="noopener">${esc(cm.label)}</a>` : ''}
+			| <a href="${gmaps}" target="_blank" rel="noopener">directions</a>
+		</div>`;
 }
 
 function popupHtml(places, statuses, oks) {
@@ -154,7 +188,7 @@ function popupHtml(places, statuses, oks) {
 		if (i > 0) html += '<hr class="sep">';
 		html += venueHtml(p, statuses[i], oks[i]);
 	});
-	html += `<div class="src"><a href="https://www.etudiant.gouv.fr/fr/carte-pour-trouver-les-resto-u-235" target="_blank" rel="noopener">Official CROUS map</a></div></div>`;
+	html += '</div>';
 	return html;
 }
 
