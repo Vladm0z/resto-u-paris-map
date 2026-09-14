@@ -1,6 +1,14 @@
 /* base */
 html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
 
+/* title box lines stack */
+.title span { display: block; }
+.title span:empty { display: none; }
+/* grey out legend rows with zero venues */
+.legend-row.empty { opacity: .35; }
+/* stale snapshot warning */
+.warn-line { color: #b3541e; }
+
 /* controls */
 .box { background: #ffffffee; border-radius: 8px; padding: 8px 12px;
        box-shadow: 0 1px 5px rgba(0,0,0,.3); font-size: 13px; line-height: 1.5; }
@@ -68,3 +76,14 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
   .panel { max-width: 60vw; }
   .panel .dot { width: 10px; height: 10px; }
 }
+
+/* menu tabs */
+.menu-today { margin: 8px 0; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e0e0e0; font-size: 13px; }
+.menu-tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid #ccc; overflow-x: auto; }
+.menu-tab { background: none; border: none; padding: 4px 10px; cursor: pointer; font-size: 12px; color: #555; border-bottom: 2px solid transparent; white-space: nowrap; }
+.menu-tab.active { color: #0d47a1; border-bottom: 2px solid #0d47a1; font-weight: 600; }
+.menu-content { margin-top: 4px; }
+.meal { margin-top: 6px; }
+.meal > i { font-weight: 600; color: #333; display: block; margin-bottom: 2px; }
+.cat { margin-left: 8px; font-size: 0.95em; line-height: 1.4; }
+.menu-credit { font-size: 0.75em; color: #888; margin-top: 8px; text-align: right; border-top: 1px solid #eee; padding-top: 4px; }

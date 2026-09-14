@@ -1,17 +1,18 @@
-/* Resto'U Paris - live open/closed map. Pan & zoom only */
+/* Resto'U Paris - live map */
 const CONFIG = {
 	darkGreenMin: 120, greenMin: 60, opensSoonMin: 60,
 	refreshSec: 60, center: [48.8566, 2.3522], zoom: 12,
 	groupDecimals: 5, // ~1 m: venues closer than this merge into one marker
+	staleHours: 48,
 };
 const COLORS = { dark_green:'#006400', green:'#00a650', yellow:'#ffd400',
-								 red:'#e53935', blue:'#1e88e5', unknown:'#8d8d8d', confirmed:'#424242' };
+	red:'#e53935', blue:'#1e88e5', unknown:'#8d8d8d', confirmed:'#424242' };
 const COLOR_KEY = Object.fromEntries(Object.entries(COLORS).map(([k, v]) => [v, k]));
 const WD = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const WD_SHORT = { Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6 };
 const RANK = { open: 4, opens_soon: 3, closed: 2, confirmed: 1, unknown: 0 };
 
-/* university filter table */
+/* university filter table: id, label, pattern tested against (access note + venue name) */
 const UNIS = [
 	['sorbonne', 'Sorbonne Université', /sorbonne\s+universit/],
 	['paris1', 'Université Paris 1 Panthéon-Sorbonne', /panth[ée]on\s*-?\s*sorbonne|paris\s*[1i]\b[^,;]*sorbonne/],
@@ -30,7 +31,7 @@ const UNIS = [
 const GENERIC_STAFF_RE = /tout\s+(le\s+)?personnel|personnels?\s+de\s+l['’]enseignement/;
 const profile = { uni: null, staff: false };
 
-/* official campus maps */
+/* curated official campus/access maps: [pattern, label, url] */
 const CAMPUS_MAPS = [
 	[/jussieu|cuvier|atrium|l'express|l'ardoise/,
 	 'Campus Jussieu plan', 'https://sciences.sorbonne-universite.fr/vie-de-campus-sciences/accueil-vie-pratique/plan-du-campus'],
@@ -51,11 +52,109 @@ const CAMPUS_MAPS = [
 	[/universit[ée] de paris|iut de paris|lacretelle|necker|pharmacie|saints-p|bichat|pajol|mazet|observatoire/,
 	 'Paris Cité sites', 'https://u-paris.fr/nos-sites-et-campus/'],
 ];
+
+
+/* CROUS venue pages contain hours/access info, but NOT menus.
+   Menus are injected via p.menu_today from the CROUStillant API. */
+const VENUE_PAGES = [
+	[/cuvier|ru cuvier/, 'RU Cuvier venue page', 'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'],
+	[/l'express|lexpress/, "L'Express venue page", 'https://www.crous-paris.fr/restaurant/lexpress/'],
+	[/l'ardoise|brasserie l'ardoise/, "Brasserie l'Ardoise venue page", 'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'],
+	[/l'atrium|cafeteria l'atrium/, "Cafétéria l'Atrium venue page", 'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'],
+	[/saint-guillaume|saint guillaume/, 'Cafétéria Saint-Guillaume venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'],
+	[/sciences po|café des sciences/, 'Cafétéria Sciences Po venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'],
+	[/ru nation|cafétéria nation/, 'RU Nation venue page', 'https://www.crous-paris.fr/restaurant/ru-nation/'],
+	[/nation libre-service/, 'Cafétéria Nation Libre-service venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'],
+	[/mabillon/, 'RU Mabillon venue page', 'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'],
+	[/châtelet|chatelet/, 'RU Châtelet venue page', 'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'],
+	[/ru dauphine/, 'RU Dauphine venue page', 'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'],
+	[/libre-service dauphine/, 'Libre-service Dauphine venue page', 'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'],
+	[/cafétéria dauphine|cafeteria dauphine/, 'Cafétéria Dauphine venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'],
+	[/clignancourt/, 'RU Clignancourt venue page', 'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'],
+	[/halle aux farines/, 'RU de la Halle aux farines venue page', 'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'],
+	[/lacretelle|lacrépelle/, 'Cafétéria Lacretelle venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'],
+	[/pharmacie/, 'Cafétéria Pharmacie venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'],
+	[/cafétéria jourdan|cafeteria jourdan/, 'Cafétéria Jourdan venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'],
+	[/portalis/, 'Libre-service Le Portalis venue page', 'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'],
+	[/pierre mendès france|mendes france|pmf/, 'Cafétéria Pierre Mendès France venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'],
+	[/bullier/, 'RU Bullier venue page', 'https://www.crous-paris.fr/restaurant/ru-bullier-3/'],
+	[/villemin/, 'Cafétéria Villemin venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'],
+	[/barge/, 'RU de la Barge venue page', 'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'],
+	[/buffon/, 'Restaurant administratif Buffon venue page', 'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'],
+];
+
+function venuePageFor(p) {
+	const text = ((p.name || '') + ' ' + (p.address || '')).toLowerCase();
+	for (const [re, label, url] of VENUE_PAGES) if (re.test(text)) return { label, url };
+	return null;
+}
+
+function parseCroustillantDate(str) {
+	if (!str) return new Date();
+	const parts = str.split('-');
+	if (parts.length === 3) return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+	return new Date();
+}
+
+function formatDateLabel(date) {
+	const today = new Date(); today.setHours(0, 0, 0, 0);
+	const target = new Date(date); target.setHours(0, 0, 0, 0);
+	const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+	if (diffDays === 0) return 'Today';
+	if (diffDays === 1) return 'Tomorrow';
+	if (diffDays > 1 && diffDays < 7) return date.toLocaleDateString('en-GB', { weekday: 'long' });
+	return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 function campusMapFor(p) {
 	const text = ((p.name || '') + ' ' + (p.address || '') + ' ' + ((p.access && p.access.note) || '')).toLowerCase();
 	for (const [re, label, url] of CAMPUS_MAPS) if (re.test(text)) return { label, url };
 	return null;
 }
+
+function renderMenus(menus) {
+	if (!menus || !Array.isArray(menus) || menus.length === 0) return '';
+	
+	let html = '<div class="menu-today">';
+	if (menus.length > 1) {
+		html += '<div class="menu-tabs">';
+		menus.forEach((m, i) => {
+			const d = parseCroustillantDate(m.date);
+			const label = formatDateLabel(d);
+			html += `<button type="button" class="menu-tab ${i === 0 ? 'active' : ''}" data-tab="${i}">${label}</button>`;
+		});
+		html += '</div>';
+	}
+	
+	menus.forEach((m, i) => {
+		html += `<div class="menu-content" data-tab="${i}" style="${i > 0 ? 'display:none;' : ''}">`;
+		for (const repas of m.repas) {
+			const mealType = repas.type === 'soir' ? 'Dinner' : (repas.type === 'midi' ? 'Lunch' : repas.type);
+			html += `<div class="meal"><i>${esc(mealType)}</i>`;
+			for (const cat of repas.categories) {
+				const items = cat.plats.map(p => esc(p)).join(', ');
+				html += `<div class="cat"><b>${esc(cat.libelle)}:</b> ${items}</div>`;
+			}
+			html += `</div>`;
+		}
+		html += '</div>';
+	});
+	html += '<div class="menu-credit">Data from <a href="https://croustillant.menu" target="_blank" rel="noopener">CROUStillant</a></div>';
+	html += '</div>';
+	return html;
+}
+
+document.addEventListener('click', (e) => {
+	if (e.target.classList.contains('menu-tab')) {
+		const popup = e.target.closest('.leaflet-popup-content-wrapper');
+		if (!popup) return;
+		const tabs = popup.querySelectorAll('.menu-tab');
+		const contents = popup.querySelectorAll('.menu-content');
+		const idx = e.target.dataset.tab;
+		tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === idx));
+		contents.forEach(c => c.style.display = c.dataset.tab === idx ? 'block' : 'none');
+	}
+});
 
 function canEnter(p, prof) {
 	if (!prof.uni) return true; // no filter
@@ -67,7 +166,7 @@ function canEnter(p, prof) {
 	if (prof.staff) {
 		if (lvl === 'staff') return mine || GENERIC_STAFF_RE.test(text);
 		if (lvl === 'restricted') return /personnel/.test(text) && mine;
-		return true; // CROUS venues serve staff as well
+		return true;
 	}
 	if (lvl === 'staff') return false; // staff-only venue, student profile
 	if (lvl === 'restricted') return mine;
@@ -95,13 +194,51 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
 	({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const trunc = (s, n) => (s && s.length > n) ? s.slice(0, n - 1) + '...' : s;
 
+/* current Paris time, incl. full date for holiday handling */
 function parisNow() {
 	const parts = new Intl.DateTimeFormat('en-GB', {
-		timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+		timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', minute: '2-digit',
+		year: 'numeric', month: '2-digit', day: '2-digit', hour12: false,
 	}).formatToParts(new Date());
 	const g = t => parts.find(p => p.type === t).value;
 	let h = parseInt(g('hour'), 10); if (h === 24) h = 0;
-	return { day: WD_SHORT[g('weekday')], minute: h * 60 + parseInt(g('minute'), 10) };
+	return { day: WD_SHORT[g('weekday')], minute: h * 60 + parseInt(g('minute'), 10),
+					 year: +g('year'), month: +g('month'), dom: +g('day') };
+}
+
+/* French public holidays: 8 fixed + Easter Monday, Ascension, Whit Monday (11 total) */
+function easterSunday(y) { // anonymous Gregorian computus, returns [month, day]
+	const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+	const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+	const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+	const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+	const m = Math.floor((a + 11 * h + 22 * l) / 451);
+	return [Math.floor((h + l - 7 * m + 114) / 31), ((h + l - 7 * m + 114) % 31) + 1];
+}
+function publicHoliday(y, m, d) {
+	const FIXED = { 101:"new year's day", 501:'labour day', 508:'VE day', 714:'bastille day',
+		815:'assumption', 1101:'all saints', 1111:'armistice', 1225:'christmas' };
+	const key = m * 100 + d;
+	if (FIXED[key]) return FIXED[key];
+	const [em, ed] = easterSunday(y);
+	const shift = n => { const t = new Date(y, em - 1, ed + n); return [t.getMonth() + 1, t.getDate()]; };
+	if ([1, 39, 50].some(n => { const t = shift(n); return t[0] === m && t[1] === d; })) {
+		const n = [1, 39, 50].find(n => { const t = shift(n); return t[0] === m && t[1] === d; });
+		return n === 1 ? 'easter monday' : n === 39 ? 'ascension' : 'whit monday';
+	}
+	return null;
+}
+/* rough usual closure windows - term-time data cannot do better than a warning */
+function seasonNote(m, d) {
+	if (m === 8)
+		return 'August closure - nearly all CROUS venues are closed for the entire month';
+	if ((m === 7 && d >= 15) || (m === 9 && d <= 5))
+		return 'Summer period - reduced service, some venues may be closed';
+	if ((m === 12 && d >= 23) || (m === 1 && d <= 2))
+		return 'Year-end break - CROUS venues typically closed until early January';
+	if ((m === 4 && d >= 20) || (m === 5 && d <= 5))
+		return 'Spring break - hours depend on the specific university calendar';
+	return null;
 }
 
 function statusOf(p, now) {
@@ -140,7 +277,6 @@ function colorFor(s) {
 	return COLORS.unknown;
 }
 
-/* best status of a set: open > opens_soon > closed > confirmed > unknown */
 function groupStatus(statuses) {
 	let best = statuses[0];
 	for (const s of statuses) if (RANK[s.state] > RANK[best.state]) best = s;
@@ -154,7 +290,8 @@ function accessBadge(a) {
 	if (a.level === 'all') return `<span class="badge ok">open to ALL students</span>`;
 	if (a.level === 'staff') return `<span class="badge staff">staff only${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
 	if (a.level === 'restricted') return `<span class="badge warn">restricted${a.note ? ': ' + esc(trunc(a.note, 70)) : ''}</span>`;
-	return `<span class="badge muted">${a.note ? esc(trunc(a.note, 70)) : 'no access info (CROUS default: all students)'}</span>`;
+	const fallback = profile.staff ? 'no access info - verify on site' : 'no access info (CROUS default: all students)';
+	return `<span class="badge muted">${a.note ? esc(trunc(a.note, 70)) : fallback}</span>`;
 }
 
 function venueHtml(p, s, ok) {
@@ -165,56 +302,64 @@ function venueHtml(p, s, ok) {
 		notices += `<div class="notice">[i] ${esc(p.closure_notice)}</div>`;
 	else if (p.description)
 		notices += `<div class="desc">${esc(p.description)}</div>`;
+	if ((p.conditional_days || []).length)
+		notices += `<div class="notice">[i] ${p.conditional_days.map(d => WD[d]).join(', ')} opening depends on the university calendar</div>`;
+
+	const menuHtml = renderMenus(p.menus);
 	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
 	const cm = campusMapFor(p);
+	const venuePage = venuePageFor(p); 
+	
+	let croustillantFallback = '';
+	if ((!p.menus || p.menus.length === 0) && p.croustillant_code) {
+		croustillantFallback = ` | <a href="https://croustillant.menu/fr/restaurant/${p.croustillant_code}" target="_blank" rel="noopener">Check menu (CROUStillant)</a>`;
+	}
+
 	const gmaps = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`;
+	
 	return `<h3>${esc(p.name)}</h3>
 		<div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}${dimBadge}</div>
 		<div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div>
 		${notices}
+		${menuHtml}
 		<div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div>
 		<div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')}
 			${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>
 		<div class="src">
 			<a href="https://www.crous-paris.fr/se-restaurer/carte/" target="_blank" rel="noopener">CROUS Paris map</a>
+			${venuePage ? ` | <a href="${venuePage.url}" target="_blank" rel="noopener">${esc(venuePage.label)}</a>` : ''}
+			${croustillantFallback}
 			${cm ? ` | <a href="${cm.url}" target="_blank" rel="noopener">${esc(cm.label)}</a>` : ''}
 			| <a href="${gmaps}" target="_blank" rel="noopener">directions</a>
 		</div>`;
 }
 
 function popupHtml(places, statuses, oks) {
-  const items = places.map((p, i) => ({ p, s: statuses[i], ok: oks[i] }));
-  
-  // Sort logic
-  items.sort((a, b) => {
-    // Accessible above inaccessible
-    if (a.ok !== b.ok) return a.ok ? -1 : 1;
-    
-    // Sort by status
-    const ra = RANK[a.s.state] || 0;
-    const rb = RANK[b.s.state] || 0;
-    if (ra !== rb) return rb - ra; 
-    
-    // If multiple are open, put the one with the most time left at the top
-    if (a.s.state === 'open' && b.s.state === 'open') return b.s.left - a.s.left;
-    
-    // Alphabetical tie-breaker
-    return a.p.name.localeCompare(b.p.name);
-  });
-
-  let html = '<div class="pop">';
-  items.forEach((it, i) => {
-    if (i > 0) html += '<hr class="sep">';
-    html += venueHtml(it.p, it.s, it.ok);
-  });
-  html += '</div>';
-  return html;
+	const items = places.map((p, i) => ({ p, s: statuses[i], ok: oks[i] }));
+	items.sort((a, b) => {
+		if (a.ok !== b.ok) return a.ok ? -1 : 1; // accessible first
+		const ra = RANK[a.s.state] || 0, rb = RANK[b.s.state] || 0;
+		if (ra !== rb) return rb - ra; // open > opens_soon > closed > ...
+		if (a.s.state === 'open' && b.s.state === 'open') return b.s.left - a.s.left;
+		return a.p.name.localeCompare(b.p.name);
+	});
+	let html = '<div class="pop">';
+	items.forEach((it, i) => {
+		if (i > 0) html += '<hr class="sep">';
+		html += venueHtml(it.p, it.s, it.ok);
+	});
+	html += '</div>';
+	return html;
 }
 
 const title = L.control({ position: 'topright' });
 title.onAdd = () => {
 	const d = L.DomUtil.create('div', 'leaflet-control box title');
-	d.innerHTML = `<b>Resto'U Paris</b><br><span id="clock"></span><br><span id="total" class="fine"></span>`;
+	d.innerHTML = `<b>Resto'U Paris</b>
+		<span id="clock"></span>
+		<span id="total" class="fine"></span>
+		<span id="season" class="fine"></span>
+		<span id="headline" class="fine"></span>`;
 	return d;
 };
 title.addTo(map);
@@ -229,13 +374,15 @@ const LEGEND = [
 	['unknown', 'Hours unknown'],
 ];
 
-/* collapsible menu: profile filter + legend */
+/* collapsible menu: data age + profile filter + legend */
 const panel = L.control({ position: 'bottomright' });
 panel.onAdd = () => {
 	const d = L.DomUtil.create('div', 'leaflet-control box panel');
 	d.innerHTML =
 		`<button id="panel-toggle" class="panel-btn" type="button">[ menu ]</button>
 		 <div id="panel-body" class="panel-body hidden">
+			 <div class="fine" id="data-line"></div>
+			 <div class="fine warn-line" id="stale-line" style="display:none">data seems stale - the refresh workflow may have failed</div>
 			 <div class="panel-sec"><b>your profile</b>
 				 <select id="uni-select" aria-label="university">
 					 <option value="">no filter - show all venues</option>
@@ -246,7 +393,7 @@ panel.onAdd = () => {
 			 </div>
 			 <div class="panel-sec"><b>legend</b>
 				 ${LEGEND.map(([k, l]) =>
-					 `<div><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('')}
+					 `<div class="legend-row" id="row-${k}"><span class="dot" style="background:${COLORS[k]}"></span>${l} <span class="cnt" id="cnt-${k}"></span></div>`).join('')}
 			 </div>
 			 <div class="fine">auto-refresh ${CONFIG.refreshSec}s - Europe/Paris time</div>
 		 </div>`;
@@ -272,10 +419,16 @@ document.getElementById('staff-chk').addEventListener('change', e => {
 
 let items = [];
 let totalVenues = 0;
+let generatedAt = null;
+
 fetch('data/paris.json')
 	.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
 	.then(data => {
-		/* group venues */
+		generatedAt = data.generated_at ? Date.parse(data.generated_at) : null;
+		const dl = document.getElementById('data-line');
+		if (dl && data.generated_at) dl.textContent = `data from: ${data.generated_at.slice(0, 10)}`;
+
+		/* group venues that sit on the same spot (rounded to ~1 m) into ONE marker */
 		const groups = new Map();
 		for (const p of data.places) {
 			const k = p.lat.toFixed(CONFIG.groupDecimals) + ',' + p.lon.toFixed(CONFIG.groupDecimals);
@@ -286,7 +439,7 @@ fetch('data/paris.json')
 		}
 		for (const g of groups.values()) { g.lat /= g.places.length; g.lon /= g.places.length; }
 		for (const g of groups.values()) {
-			const size = g.places.length > 1 ? 26 : 22; // slightly larger for multi-venue spots
+			const size = g.places.length > 1 ? 26 : 22; // slightly larger for multi-venue
 			const icon = L.divIcon({
 				className: 'pie-marker-wrapper',
 				html: '<div class="pie-marker"></div>',
@@ -294,7 +447,14 @@ fetch('data/paris.json')
 				iconAnchor: [size / 2, size / 2],
 			});
 			const marker = L.marker([g.lat, g.lon], { icon }).addTo(map);
-			items.push({ places: g.places, marker, size, names: g.places.map(p => p.name).join(' / ') });
+			const item = { places: g.places, marker, size,
+				names: g.places.map(p => p.name).join(' / '), lastHtml: '' };
+			/* content is (re)computed lazily at open time */
+			marker.bindPopup(() => popupHtml(item.places,
+				item.places.map(p => statusOf(p, parisNow())),
+				item.places.map(p => canEnter(p, profile))),
+				{ autoPan: true, className: 'mobile-popup', maxWidth: 360 });
+			items.push(item);
 		}
 		totalVenues = data.places.length;
 		const el = document.getElementById('total');
@@ -307,16 +467,19 @@ fetch('data/paris.json')
 function tick() {
 	const now = parisNow();
 	const counts = Object.fromEntries(Object.keys(COLORS).map(k => [k, 0]));
-	let filtered = 0;
+	let filtered = 0, openCount = 0, accessibleCount = 0;
+
 	for (const it of items) {
 		const statuses = it.places.map(p => statusOf(p, now));
 		const oks = it.places.map(p => canEnter(p, profile));
 		filtered += oks.filter(o => !o).length;
+		openCount += statuses.filter(s => s.state === 'open').length;
+		accessibleCount += oks.filter(Boolean).length;
 		const pool = statuses.filter((_, i) => oks[i]); // accessible venues only
 		const dim = pool.length === 0; // nothing accessible at this spot
 		const best = groupStatus(pool.length ? pool : statuses);
 
-		/* one pie slice per venue */
+		/* one pie slice per venue; ghost slice (15% opacity) when not accessible */
 		const step = 100 / statuses.length;
 		const stops = statuses.map((s, i) => {
 			const col = colorFor(s);
@@ -338,19 +501,41 @@ function tick() {
 		} else {
 			it.marker.setTooltipContent(tooltipText);
 		}
-		it.marker.bindPopup(popupHtml(it.places, statuses, oks), {
-			autoPan: true, className: 'mobile-popup', maxWidth: 360,
-		});
 
-		/* count accessible venues individually */
-		for (const s of pool) counts[COLOR_KEY[colorFor(s)]]++;
+		/* refresh an OPEN popup only when its content actually changed */
+		if (it.marker.isPopupOpen()) {
+			const html = popupHtml(it.places, statuses, oks);
+			if (html !== it.lastHtml) {
+				it.marker.getPopup().setContent(html);
+				it.lastHtml = html;
+			}
+		}
+
+		/* legend: count accessible venues individually */
+		if (!dim) for (const s of pool) counts[COLOR_KEY[colorFor(s)]]++;
 	}
+
 	for (const [k] of LEGEND) {
 		const el = document.getElementById('cnt-' + k);
 		if (el) el.textContent = counts[k] ? `(${counts[k]})` : '';
+		const row = document.getElementById('row-' + k);
+		if (row) row.classList.toggle('empty', counts[k] === 0); // grey out zero rows
 	}
+
 	const fl = document.getElementById('filtered-line');
 	if (fl) fl.textContent = profile.uni ? `filtered out: ${filtered} of ${totalVenues} venues` : '';
+	const hl = document.getElementById('headline');
+	if (hl) hl.textContent = `${openCount} open now (${accessibleCount} accessible to you)`;
+	const seasonEl = document.getElementById('season');
+	if (seasonEl) {
+		const holiday = publicHoliday(now.year, now.month, now.dom);
+		seasonEl.textContent = holiday ? `public holiday (${holiday}) - hours may differ`
+			: (seasonNote(now.month, now.dom) || '');
+	}
+	const sl = document.getElementById('stale-line');
+	if (sl) sl.style.display =
+		(generatedAt && Date.now() - generatedAt > CONFIG.staleHours * 3600 * 1000) ? '' : 'none';
+
 	const el = document.getElementById('clock');
 	if (el) el.textContent = `Paris time: ${fmtMin(now.minute)} - ${WD[now.day]}`;
 }

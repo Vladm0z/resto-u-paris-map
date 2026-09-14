@@ -2,7 +2,8 @@ name: refresh-data
 
 on:
   schedule:
-    - cron: "0 5 * * 1-5"  # weekdays 05:00 UTC
+    # Run at 05:00 UTC on Mondays and Thursdays
+    - cron: "0 5 * * 1,4"
   workflow_dispatch: {}
 
 permissions:
@@ -15,16 +16,17 @@ jobs:
       - uses: actions/checkout@v4
       
       - uses: actions/setup-python@v5
-        with: 
+        with:
           python-version: "3.12"
           
       - name: Scrape CROUS data
         run: python scripts/scrape.py
         
-      - name: Commit updated data
+      - name: Commit and push updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/paris.json
+          # Only commit if there are actual changes to the file
           git diff --cached --quiet || git commit -m "refresh CROUS Paris data"
           git push
