@@ -57,3 +57,21 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
 	.title b { font-size: 12px; }
 	.legend .dot { width: 10px; height: 10px; }
 }
+
+.pie-marker-wrapper {
+    background: transparent !important;
+    border: none !important;
+}
+.pie-marker {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    box-sizing: border-box;
+    transition: transform 0.15s ease-out;
+    cursor: pointer;
+}
+.pie-marker:hover {
+    transform: scale(1.15);
+}
