@@ -106,6 +106,17 @@ function formatDateLabel(date) {
 	return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+function isPastDate(date) {
+	const today = new Date(); today.setHours(0, 0, 0, 0);
+	const target = new Date(date); target.setHours(0, 0, 0, 0);
+	return target < today;
+}
+
+function usableMenus(menus) {
+	if (!menus || !Array.isArray(menus)) return [];
+	return menus.filter(m => !isPastDate(parseCroustillantDate(m.date)));
+}
+
 function campusMapFor(p) {
 	const text = ((p.name || '') + ' ' + (p.address || '') + ' ' + ((p.access && p.access.note) || '')).toLowerCase();
 	for (const [re, label, url] of CAMPUS_MAPS) if (re.test(text)) return { label, url };
@@ -120,9 +131,10 @@ function resolveMenus(p) {
 }
 
 function renderMenus(menus) {
-	if (!menus || !Array.isArray(menus) || menus.length === 0) return '';
+	menus = usableMenus(menus);
 	const allSame = menus.length > 1 && menus.every(m => m._ref === menus[0]._ref);
-
+	
+	if (menus.length === 0) return '';
 	let html = '<div class="menu-today">';
 	if (allSame) {
 		const first = formatDateLabel(parseCroustillantDate(menus[0].date));
@@ -324,7 +336,7 @@ function venueHtml(p, s, ok) {
 	const venuePage = venuePageFor(p); 
 	
 	let croustillantFallback = '';
-	if ((!p.menu_refs || p.menu_refs.length === 0) && p.croustillant_code) {
+	if (usableMenus(p.menus).length === 0 && p.croustillant_code) {
 		croustillantFallback = ` | <a href="https://croustillant.menu/fr/restaurant/${p.croustillant_code}" target="_blank" rel="noopener">Check menu (CROUStillant)</a>`;
 	}
 
