@@ -57,30 +57,30 @@ const CAMPUS_MAPS = [
 /* CROUS venue pages contain hours/access info, but NOT menus.
    Menus are injected via p.menu_today from the CROUStillant API. */
 const VENUE_PAGES = [
-	[/cuvier|ru cuvier/, 'RU Cuvier venue page', 'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'],
-	[/l'express|lexpress/, "L'Express venue page", 'https://www.crous-paris.fr/restaurant/lexpress/'],
-	[/l'ardoise|brasserie l'ardoise/, "Brasserie l'Ardoise venue page", 'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'],
-	[/l'atrium|cafeteria l'atrium/, "Cafétéria l'Atrium venue page", 'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'],
-	[/saint-guillaume|saint guillaume/, 'Cafétéria Saint-Guillaume venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'],
-	[/sciences po|café des sciences/, 'Cafétéria Sciences Po venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'],
-	[/ru nation|cafétéria nation/, 'RU Nation venue page', 'https://www.crous-paris.fr/restaurant/ru-nation/'],
-	[/nation libre-service/, 'Cafétéria Nation Libre-service venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'],
-	[/mabillon/, 'RU Mabillon venue page', 'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'],
-	[/châtelet|chatelet/, 'RU Châtelet venue page', 'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'],
-	[/ru dauphine/, 'RU Dauphine venue page', 'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'],
-	[/libre-service dauphine/, 'Libre-service Dauphine venue page', 'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'],
-	[/cafétéria dauphine|cafeteria dauphine/, 'Cafétéria Dauphine venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'],
-	[/clignancourt/, 'RU Clignancourt venue page', 'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'],
-	[/halle aux farines/, 'RU de la Halle aux farines venue page', 'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'],
-	[/lacretelle|lacrépelle/, 'Cafétéria Lacretelle venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'],
-	[/pharmacie/, 'Cafétéria Pharmacie venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'],
-	[/cafétéria jourdan|cafeteria jourdan/, 'Cafétéria Jourdan venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'],
-	[/portalis/, 'Libre-service Le Portalis venue page', 'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'],
-	[/pierre mendès france|mendes france|pmf/, 'Cafétéria Pierre Mendès France venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'],
-	[/bullier/, 'RU Bullier venue page', 'https://www.crous-paris.fr/restaurant/ru-bullier-3/'],
-	[/villemin/, 'Cafétéria Villemin venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'],
-	[/barge/, 'RU de la Barge venue page', 'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'],
-	[/buffon/, 'Restaurant administratif Buffon venue page', 'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'],
+    [/cuvier|ru cuvier/, 'RU Cuvier venue page', 'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'],
+    [/l'express|lexpress/, "L'Express venue page", 'https://www.crous-paris.fr/restaurant/lexpress/'],
+    [/l'ardoise|brasserie l'ardoise/, "Brasserie l'Ardoise venue page", 'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'],
+    [/l'atrium|cafeteria l'atrium/, "Cafétéria l'Atrium venue page", 'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'],
+    [/saint-guillaume|saint guillaume/, 'Cafétéria Saint-Guillaume venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'],
+    [/sciences po|café des sciences/, 'Cafétéria Sciences Po venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'],
+    [/ru nation|cafétéria nation/, 'RU Nation venue page', 'https://www.crous-paris.fr/restaurant/ru-nation/'],
+    [/nation libre-service/, 'Cafétéria Nation Libre-service venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'],
+    [/mabillon/, 'RU Mabillon venue page', 'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'],
+    [/châtelet|chatelet/, 'RU Châtelet venue page', 'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'],
+    [/ru dauphine/, 'RU Dauphine venue page', 'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'],
+    [/libre-service dauphine/, 'Libre-service Dauphine venue page', 'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'],
+    [/cafétéria dauphine|cafeteria dauphine/, 'Cafétéria Dauphine venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'],
+    [/clignancourt/, 'RU Clignancourt venue page', 'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'],
+    [/halle aux farines/, 'RU de la Halle aux farines venue page', 'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'],
+    [/lacretelle|lacrépelle/, 'Cafétéria Lacretelle venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'],
+    [/pharmacie/, 'Cafétéria Pharmacie venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'],
+    [/cafétéria jourdan|cafeteria jourdan/, 'Cafétéria Jourdan venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'],
+    [/portalis/, 'Libre-service Le Portalis venue page', 'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'],
+    [/pierre mendès france|mendes france|pmf/, 'Cafétéria Pierre Mendès France venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'],
+    [/bullier/, 'RU Bullier venue page', 'https://www.crous-paris.fr/restaurant/ru-bullier-3/'],
+    [/villemin/, 'Cafétéria Villemin venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'],
+    [/barge/, 'RU de la Barge venue page', 'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'],
+    [/buffon/, 'Restaurant administratif Buffon venue page', 'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'],
 ];
 
 function venuePageFor(p) {
@@ -130,7 +130,7 @@ function resolveMenus(p) {
 		.map(ref => ({ date: ref.date, repas: GLOBAL_MENUS[ref.m], _ref: ref.m }));
 }
 
-function renderMenus(menus) {
+function renderMenus(menus, p) {
 	menus = usableMenus(menus);
 	const allSame = menus.length > 1 && menus.every(m => m._ref === menus[0]._ref);
 	
@@ -164,7 +164,11 @@ function renderMenus(menus) {
 		}
 		html += '</div>';
 	});
-	html += '<div class="menu-credit">Data from <a href="https://croustillant.menu" target="_blank" rel="noopener">CROUStillant</a></div>';
+	let creditUrl = 'https://croustillant.menu';
+	if (p && p.croustillant_code && p.croustillant_slug) {
+		 creditUrl = `https://croustillant.menu/fr/restaurants/${p.croustillant_slug}-r${p.croustillant_code}`;
+	}
+	html += `<div class="menu-credit">Data from <a href="${creditUrl}" target="_blank" rel="noopener">CROUStillant</a></div>`;
 	html += '</div>';
 	return html;
 }
@@ -330,33 +334,34 @@ function venueHtml(p, s, ok) {
 	if ((p.conditional_days || []).length)
 		notices += `<div class="notice">[i] ${p.conditional_days.map(d => WD[d]).join(', ')} opening depends on the university calendar</div>`;
 
-	const menuHtml = renderMenus(resolveMenus(p));
+	const resolvedMenus = resolveMenus(p);
+	const menuHtml = renderMenus(resolveMenus(p), p);
 	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
 	const cm = campusMapFor(p);
 	const venuePage = venuePageFor(p); 
 	
-	let croustillantFallback = '';
-	if (usableMenus(p.menus).length === 0 && p.croustillant_code) {
-		croustillantFallback = ` | <a href="https://croustillant.menu/fr/restaurant/${p.croustillant_code}" target="_blank" rel="noopener">Check menu (CROUStillant)</a>`;
+	let croustillantLink = '';
+	if (p.croustillant_code && p.croustillant_slug) {
+		 croustillantLink = ` | <a href="https://croustillant.menu/fr/restaurants/${p.croustillant_slug}-r${p.croustillant_code}" target="_blank" rel="noopener">CROUStillant page</a>`;
 	}
 
 	const gmaps = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`;
-	
+    
 	return `<h3>${esc(p.name)}</h3>
-		<div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}${dimBadge}</div>
-		<div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div>
-		${notices}
-		${menuHtml}
-		<div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div>
-		<div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')}
-			${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>
-		<div class="src">
-			<a href="https://www.crous-paris.fr/se-restaurer/carte/" target="_blank" rel="noopener">CROUS Paris map</a>
-			${venuePage ? ` | <a href="${venuePage.url}" target="_blank" rel="noopener">${esc(venuePage.label)}</a>` : ''}
-			${croustillantFallback}
-			${cm ? ` | <a href="${cm.url}" target="_blank" rel="noopener">${esc(cm.label)}</a>` : ''}
-			| <a href="${gmaps}" target="_blank" rel="noopener">directions</a>
-		</div>`;
+        <div class="badges"><span class="badge type">${esc(p.type || '?')}</span>${accessBadge(p.access)}${dimBadge}</div>
+        <div class="status" style="color:${colorFor(s)}">* ${esc(s.label)}</div>
+        ${notices}
+        ${menuHtml}
+        <div class="addr">${esc(p.address || '')}${p.zone ? ' - ' + esc(p.zone) : ''}</div>
+        <div class="hours"><b>Hours (as published):</b> ${esc(p.hours_raw || 'n/a')}
+            ${p.schedule_confidence === 'unparsed' ? '<i> (could not parse - check raw text)</i>' : ''}</div>
+        <div class="src">
+            <a href="https://www.crous-paris.fr/se-restaurer/carte/" target="_blank" rel="noopener">CROUS Paris map</a>
+            ${venuePage ? ` | <a href="${venuePage.url}" target="_blank" rel="noopener">${esc(venuePage.label)}</a>` : ''}
+            ${croustillantLink}
+            ${cm ? ` | <a href="${cm.url}" target="_blank" rel="noopener">${esc(cm.label)}</a>` : ''}
+            | <a href="${gmaps}" target="_blank" rel="noopener">directions</a>
+        </div>`;
 }
 
 function popupHtml(places, statuses, oks) {
