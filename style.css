@@ -63,6 +63,23 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
 .pie-marker.dim { opacity: .45; border-color: #9e9e9e; }
 
 /* mobile adjustments */
+@media (max-width: 600px) {
+	.leaflet-top.leaflet-right {
+		left: 0;
+		right: 0;
+	}
+	.leaflet-top.leaflet-right .title {
+		float: none;
+		width: max-content;
+		max-width: 92vw;
+		margin: 8px auto 0;
+		pointer-events: none;
+	}
+	.title b,
+	.title span.fine { display: none; }
+	.title #clock { display: inline; }
+}
+
 .mobile-popup .leaflet-popup-content-wrapper { max-width: min(360px, 85vw) !important;
                                                border-radius: 8px; }
 .mobile-popup .leaflet-popup-content { margin: 12px !important; max-height: 55vh;
