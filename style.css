@@ -65,7 +65,7 @@ html, body, #map { height: 100%; margin: 0; font-family: system-ui, -apple-syste
 /* mobile adjustments */
 .mobile-popup .leaflet-popup-content-wrapper { max-width: min(360px, 85vw) !important;
                                                border-radius: 8px; }
-.mobile-popup .leaflet-popup-content { margin: 12px !important; max-height: 75vh;
+.mobile-popup .leaflet-popup-content { margin: 12px !important; max-height: 55vh;
                                        overflow-y: auto; font-size: 13px; line-height: 1.5; }
 .mobile-popup .pop * { word-break: break-word; overflow-wrap: break-word; }
 .mobile-popup .badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
