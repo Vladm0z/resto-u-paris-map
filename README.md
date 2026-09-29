@@ -2,6 +2,8 @@
 
 A static web map showing the live open/closed status of CROUS student restaurants, cafeterias and self-service points in Paris. Status is computed client-side from opening hours scraped from the official open-data dataset of the French Ministry of Higher Education and Research (the same dataset powering etudiant.gouv.fr).
 
+https://vladm0z.github.io/resto-u-paris-map/
+
 ## Data source
 
 - Dataset: `fr_crous_restauration_france_entiere` (MESR Opendatasoft platform).
