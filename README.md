@@ -8,7 +8,6 @@ https://vladm0z.github.io/resto-u-paris-map/
 
 - Dataset: `fr_crous_restauration_france_entiere` (MESR Opendatasoft platform).
 - API: `https://mesr.opendatasoft.com/api/explore/v2.1/catalog/datasets/fr_crous_restauration_france_entiere/records`
-- Filter: `zone like "Paris*"` (configurable in `scrape.py`).
 
 Opening hours exist only as free text in the `infos` field. The scraper parses this into a structured weekly schedule.
 
