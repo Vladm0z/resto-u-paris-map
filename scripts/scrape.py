@@ -7,30 +7,54 @@ from pathlib import Path
 from html.parser import HTMLParser
 
 VENUE_PAGES = [
-    (re.compile(r'cuvier|ru cuvier', re.I), 'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'),
-    (re.compile(r"l'express|lexpress", re.I), 'https://www.crous-paris.fr/restaurant/lexpress/'),
-    (re.compile(r"l'ardoise|brasserie l'ardoise", re.I), 'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'),
-    (re.compile(r"l'atrium|cafeteria l'atrium", re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'),
-    (re.compile(r'saint-guillaume|saint guillaume', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'),
-    (re.compile(r'sciences po|café des sciences', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'),
-    (re.compile(r'ru nation|cafétéria nation', re.I), 'https://www.crous-paris.fr/restaurant/ru-nation/'),
-    (re.compile(r'nation libre-service', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'),
-    (re.compile(r'mabillon', re.I), 'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'),
-    (re.compile(r'châtelet|chatelet', re.I), 'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'),
-    (re.compile(r'ru dauphine', re.I), 'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'),
-    (re.compile(r'libre-service dauphine', re.I), 'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'),
-    (re.compile(r'cafétéria dauphine|cafeteria dauphine', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'),
-    (re.compile(r'clignancourt', re.I), 'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'),
-    (re.compile(r'halle aux farines', re.I), 'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'),
-    (re.compile(r'lacretelle|lacrépelle', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'),
-    (re.compile(r'pharmacie', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'),
-    (re.compile(r'cafétéria jourdan|cafeteria jourdan', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'),
-    (re.compile(r'portalis', re.I), 'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'),
-    (re.compile(r'pierre mendès france|mendes france|pmf', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'),
-    (re.compile(r'bullier', re.I), 'https://www.crous-paris.fr/restaurant/ru-bullier-3/'),
-    (re.compile(r'villemin', re.I), 'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'),
-    (re.compile(r'barge', re.I), 'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'),
-    (re.compile(r'buffon', re.I), 'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'),
+    (re.compile(r'nation libre-service', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'),
+    (re.compile(r'ru nation', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-nation/'),
+    (re.compile(r'cuvier|ru cuvier', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'),
+    (re.compile(r"l'express|lexpress", re.I),
+     'https://www.crous-paris.fr/restaurant/lexpress/'),
+    (re.compile(r"l'ardoise|brasserie l'ardoise", re.I),
+     'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'),
+    (re.compile(r"l'atrium|cafeteria l'atrium", re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'),
+    (re.compile(r'saint-guillaume|saint guillaume', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'),
+    (re.compile(r'sciences po|café des sciences', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'),
+    (re.compile(r'mabillon', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'),
+    (re.compile(r'châtelet|chatelet', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'),
+    (re.compile(r'ru dauphine', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'),
+    (re.compile(r'libre-service dauphine', re.I),
+     'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'),
+    (re.compile(r'cafétéria dauphine|cafeteria dauphine', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'),
+    (re.compile(r'clignancourt', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'),
+    (re.compile(r'halle aux farines', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'),
+    (re.compile(r'lacretelle|lacrépelle', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'),
+    (re.compile(r'pharmacie', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'),
+    (re.compile(r'cafétéria jourdan|cafeteria jourdan', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'),
+    (re.compile(r'portalis', re.I),
+     'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'),
+    (re.compile(r'pierre mendès france|mendes france|pmf', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'),
+    (re.compile(r'bullier', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-bullier-3/'),
+    (re.compile(r'villemin', re.I),
+     'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'),
+    (re.compile(r'ru de la barge|ru barge', re.I),
+     'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'),
+    (re.compile(r'buffon', re.I),
+     'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'),
 ]
 
 API = ("https://mesr.opendatasoft.com/api/explore/v2.1/catalog/datasets/"
@@ -56,8 +80,26 @@ def get_crous_paris_url(name, address):
             return url
     return None
 
-from html.parser import HTMLParser
-from datetime import datetime
+OFFICIAL_NOISE_RE = re.compile(
+    r"certains produits ne sont pas disponibles|"
+    r"menus élaborés sous réserve|"
+    r"^\s*(\.{3}|…|\+|ou|info|infos)\s*$",
+    re.I
+)
+
+def clean_official_plat(raw):
+    if not raw:
+        return None
+    s = raw.strip()
+    s = re.sub(r"\s*\([^)]*points?\)", "", s, flags=re.I)
+    s = re.sub(r"\s+\d+(?:[.,]\d+)?\s*points?\b", "", s, flags=re.I)
+    s = s.lstrip("*-–• ").strip()
+    s = re.sub(r"\s+", " ", s)
+    if not s:
+        return None
+    if OFFICIAL_NOISE_RE.search(s):
+        return None
+    return s
 
 class MultiDayMealParser(HTMLParser):
     def __init__(self):
@@ -104,19 +146,28 @@ class MultiDayMealParser(HTMLParser):
             if tag == 'ul':
                 self.ul_depth -= 1
                 if self.ul_depth == 1 and self.current_cat:
-                    # Finished a category
                     clean_plats = []
                     for p in self.current_cat["plats"]:
-                        p_clean = re.sub(r'\s*\([^)]*points?\)', '', p).strip()
-                        if p_clean: clean_plats.append(p_clean)
+                        cleaned = clean_official_plat(p)
+                        if cleaned:
+                            clean_plats.append(cleaned)
+                    libelle = re.sub(r"\s+", " ", self.current_cat["libelle"]).strip()
+                    self.current_cat["libelle"] = libelle
                     self.current_cat["plats"] = clean_plats
-                    if self.current_cat["libelle"] and self.current_cat["plats"]:
+                    skip_cat = (
+                        not libelle
+                        or not clean_plats
+                        or libelle.lower() in {"info", "infos"}
+                    )
+                    if not skip_cat:
                         self.current_meal["categories"].append(self.current_cat)
                     self.current_cat = None
                     
                 if self.ul_depth == 0:
-                    # Finished the meal
                     if self.current_meal and self.current_meal["categories"] and self.current_date:
+                        self.current_meal["type"] = re.sub(
+                            r"\s+", " ", self.current_meal["type"]
+                        ).strip()
                         self.menus[self.current_date].append(self.current_meal)
                     self.current_meal = None
                     self.in_meal_foodies = False
@@ -165,12 +216,14 @@ def fetch_crous_paris_menu(url):
             for meal in meals:
                 if not meal["categories"]: continue
                 t = meal["type"].lower()
-                if "déjeuner" in t or "midi" in t:
+                if any(x in t for x in ("petit déjeuner", "petit-dejeuner", "matin")):
+                    meal_type = "matin"
+                elif "déjeuner" in t or "midi" in t:
                     meal_type = "midi"
                 elif "dîner" in t or "soir" in t:
                     meal_type = "soir"
                 else:
-                    meal_type = meal["type"].strip()
+                    meal_type = meal["type"].strip() or "midi"
                     
                 repas_list.append({
                     "type": meal_type,
@@ -438,7 +491,6 @@ def main():
         matched_crous = None
         best_score = -1
         
-        # Score-based matching to prevent e.g. RU Nation matching Admin Nation
         for crous_norm, crous_data in croustillant_data.items():
             crous_orig = crous_data["original_name"]
             crous_core = core_name(crous_orig)
@@ -515,17 +567,43 @@ def main():
     unp = sum(1 for p in places if p["schedule_confidence"] == "unparsed")
     cond = sum(1 for p in places if p["conditional_days"])
     confirmed = sum(1 for p in places if p["closure_status"] == "confirmed")
-    with_menus = sum(1 for p in places if p.get("menu_refs"))
-    
-    print(f"\nwrote {OUT}: {len(places)} places ({len(places) - unp} parsed, {unp} unparsed, "
-          f"{cond} conditional, {with_menus} with menus, {len(unique_menus)} unique menus)")
+
+    with_croustillant_menus = sum(1 for p in places if p.get("menu_refs"))
+    with_official_menus = sum(1 for p in places if p.get("crous_menu"))
+    with_any_menu = sum(
+        1 for p in places
+        if p.get("menu_refs") or p.get("crous_menu")
+    )
+    no_menu = [
+        p["name"]
+        for p in places
+        if not p.get("menu_refs") and not p.get("crous_menu")
+    ]
+    crous_code_but_no_menu = [
+        p["name"]
+        for p in places
+        if p.get("croustillant_code") and not p.get("menu_refs")
+    ]
+    print(
+        f"\nwrote {OUT}: {len(places)} places "
+        f"({len(places) - unp} parsed, {unp} unparsed, {cond} conditional)"
+    )
+    print(
+        f"menus: {with_any_menu} with any menu, "
+        f"{with_croustillant_menus} with CROUStillant menus, "
+        f"{with_official_menus} with official CROUS Paris menus, "
+        f"{len(unique_menus)} unique CROUStillant menus"
+    )
     print(f"closures: {confirmed} confirmed, {len(stale)} stale flags ignored: {stale}")
 
-    # Diagnostic for unmatched venues
-    unmatched = [p["name"] for p in places if not p.get("croustillant_code")]
-    if unmatched:
-        print(f"\n  Note: {len(unmatched)} venues have no CROUStillant match (likely closed or no daily menu):")
-        for n in unmatched[:15]:
+    if no_menu:
+        print(f"\nWarning: {len(no_menu)} venues have no menu from either source:")
+        for n in no_menu[:50]:
+            print(f"    - {n}")
+
+    if crous_code_but_no_menu:
+        print(f"\nWarning: {len(crous_code_but_no_menu)} venues matched CROUStillant but returned no menu:")
+        for n in crous_code_but_no_menu[:50]:
             print(f"    - {n}")
 
 if __name__ == "__main__":

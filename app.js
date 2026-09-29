@@ -54,32 +54,56 @@ const CAMPUS_MAPS = [
 ];
 
 
-/* CROUS venue pages are used for official site links */
+/* Official CROUS Paris venue pages */
 const VENUE_PAGES = [
-    [/cuvier|ru cuvier/, 'RU Cuvier venue page', 'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'],
-    [/l'express|lexpress/, "L'Express venue page", 'https://www.crous-paris.fr/restaurant/lexpress/'],
-    [/l'ardoise|brasserie l'ardoise/, "Brasserie l'Ardoise venue page", 'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'],
-    [/l'atrium|cafeteria l'atrium/, "Cafétéria l'Atrium venue page", 'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'],
-    [/saint-guillaume|saint guillaume/, 'Cafétéria Saint-Guillaume venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'],
-    [/sciences po|café des sciences/, 'Cafétéria Sciences Po venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'],
-    [/ru nation|cafétéria nation/, 'RU Nation venue page', 'https://www.crous-paris.fr/restaurant/ru-nation/'],
-    [/nation libre-service/, 'Cafétéria Nation Libre-service venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'],
-    [/mabillon/, 'RU Mabillon venue page', 'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'],
-    [/châtelet|chatelet/, 'RU Châtelet venue page', 'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'],
-    [/ru dauphine/, 'RU Dauphine venue page', 'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'],
-    [/libre-service dauphine/, 'Libre-service Dauphine venue page', 'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'],
-    [/cafétéria dauphine|cafeteria dauphine/, 'Cafétéria Dauphine venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'],
-    [/clignancourt/, 'RU Clignancourt venue page', 'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'],
-    [/halle aux farines/, 'RU de la Halle aux farines venue page', 'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'],
-    [/lacretelle|lacrépelle/, 'Cafétéria Lacretelle venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'],
-    [/pharmacie/, 'Cafétéria Pharmacie venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'],
-    [/cafétéria jourdan|cafeteria jourdan/, 'Cafétéria Jourdan venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'],
-    [/portalis/, 'Libre-service Le Portalis venue page', 'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'],
-    [/pierre mendès france|mendes france|pmf/, 'Cafétéria Pierre Mendès France venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'],
-    [/bullier/, 'RU Bullier venue page', 'https://www.crous-paris.fr/restaurant/ru-bullier-3/'],
-    [/villemin/, 'Cafétéria Villemin venue page', 'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'],
-    [/barge/, 'RU de la Barge venue page', 'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'],
-    [/buffon/, 'Restaurant administratif Buffon venue page', 'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'],
+    [/nation libre-service/, 'Cafétéria Nation Libre-service venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-nation-libre-service-2/'],
+    [/ru nation/, 'RU Nation venue page',
+     'https://www.crous-paris.fr/restaurant/ru-nation/'],
+    [/cuvier|ru cuvier/, 'RU Cuvier venue page',
+     'https://www.crous-paris.fr/restaurant/ru-cuvier-3/'],
+    [/l'express|lexpress/, "L'Express venue page",
+     'https://www.crous-paris.fr/restaurant/lexpress/'],
+    [/l'ardoise|brasserie l'ardoise/, "Brasserie l'Ardoise venue page",
+     'https://www.crous-paris.fr/restaurant/brasserie-lardoise-3/'],
+    [/l'atrium|cafeteria l'atrium/, "Cafétéria l'Atrium venue page",
+     'https://www.crous-paris.fr/restaurant/cafeteria-latrium-3/'],
+    [/saint-guillaume|saint guillaume/, 'Cafétéria Saint-Guillaume venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-saint-guillaume-sciences-po/'],
+    [/sciences po|café des sciences/, 'Cafétéria Sciences Po venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-sciences-po-3/'],
+    [/mabillon/, 'RU Mabillon venue page',
+     'https://www.crous-paris.fr/restaurant/ru-mabillon-3/'],
+    [/châtelet|chatelet/, 'RU Châtelet venue page',
+     'https://www.crous-paris.fr/restaurant/ru-chatelet-3/'],
+    [/ru dauphine/, 'RU Dauphine venue page',
+     'https://www.crous-paris.fr/restaurant/ru-dauphine-3/'],
+    [/libre-service dauphine/, 'Libre-service Dauphine venue page',
+     'https://www.crous-paris.fr/restaurant/libre-service-dauphine/'],
+    [/cafétéria dauphine|cafeteria dauphine/, 'Cafétéria Dauphine venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-dauphine-3/'],
+    [/clignancourt/, 'RU Clignancourt venue page',
+     'https://www.crous-paris.fr/restaurant/ru-clignancourt-3/'],
+    [/halle aux farines/, 'RU de la Halle aux farines venue page',
+     'https://www.crous-paris.fr/restaurant/ru-de-la-halle-aux-farines-3/'],
+    [/lacretelle|lacrépelle/, 'Cafétéria Lacretelle venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-lacretelle-3/'],
+    [/pharmacie/, 'Cafétéria Pharmacie venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-pharmacie-3/'],
+    [/cafétéria jourdan|cafeteria jourdan/, 'Cafétéria Jourdan venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-jourdan/'],
+    [/portalis/, 'Libre-service Le Portalis venue page',
+     'https://www.crous-paris.fr/restaurant/libre-service-le-portalis-assas/'],
+    [/pierre mendès france|mendes france|pmf/, 'Cafétéria Pierre Mendès France venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-pierre-mendes-france-3/'],
+    [/bullier/, 'RU Bullier venue page',
+     'https://www.crous-paris.fr/restaurant/ru-bullier-3/'],
+    [/villemin/, 'Cafétéria Villemin venue page',
+     'https://www.crous-paris.fr/restaurant/cafeteria-villemin-3/'],
+    [/ru de la barge|ru barge/, 'RU de la Barge venue page',
+     'https://www.crous-paris.fr/restaurant/ru-la-barge-du-crous-de-paris-3/'],
+    [/buffon/, 'Restaurant administratif Buffon venue page',
+     'https://www.crous-paris.fr/restaurant/restaurant-administratif-buffon-3/'],
 ];
 
 function venuePageFor(p) {
@@ -418,7 +442,9 @@ function venueHtml(p, s, ok) {
 	if ((p.conditional_days || []).length)
 		notices += `<div class="notice">[i] ${p.conditional_days.map(d => WD[d]).join(', ')} opening depends on the university calendar</div>`;
 
-	const menuHtml = renderMenus(resolveMenus(p), p);
+	const menuHtml = p.closure_status === 'confirmed'
+		? ''
+		: renderMenus(resolveMenus(p), p);
 	const dimBadge = ok ? '' : `<span class="badge dim">not accessible with your profile</span>`;
 	const cm = campusMapFor(p);
 	const venuePage = venuePageFor(p); 
